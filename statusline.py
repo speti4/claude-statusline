@@ -6,7 +6,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # ── Config ──────────────────────────────────────────────────────────
 STYLE = "minimal"  # "minimal" | "powerline" | "powerline-short"
-COLOR_SCHEME = "default"  # "default" | "banana-blueberry" | "catppuccin-mocha"
+COLOR_SCHEME = "default"  # "default" | "banana-blueberry" | "catppuccin-frappe" | "catppuccin-latte" | "catppuccin-macchiato" | "catppuccin-mocha"
 SHOW_RATE_LIMITS = "all"  # "all" | "5h" | "7d" | "none"
 
 # ── Data ────────────────────────────────────────────────────────────
@@ -88,6 +88,72 @@ PALETTES = {
         "BAR_OK":   (0, 189, 156),   # #00BD9C
         "BAR_WARN": (230, 198, 47),  # #E6C62F
         "BAR_CRIT": (255, 107, 127), # #FF6B7F
+    },
+    "catppuccin-frappe": {
+        "C_MODEL": "\033[38;2;140;170;238m",   # #8caaee Blue
+        "C_DIR":   "\033[38;2;198;208;245m",   # #c6d0f5 Text
+        "C_DIM":   "\033[38;2;98;104;128m",    # #626880 Surface 2
+        "C_GIT":   "\033[38;2;166;209;137m",   # #a6d189 Green
+        "C_SEP":   "\033[38;2;98;104;128m",    # #626880 Surface 2
+        "C_PCT":   "\033[38;2;181;191;226m",   # #b5bfe2 Subtext 1
+        "C_OK":    "\033[38;2;166;209;137m",   # #a6d189 Green
+        "C_WARN":  "\033[38;2;229;200;144m",   # #e5c890 Yellow
+        "C_CRIT":  "\033[38;2;231;130;132m",   # #e78284 Red
+        "BG_MODEL": (140, 170, 238), # #8caaee Blue accent
+        "BG_DARK":  (41, 44, 60),    # #292c3c Mantle
+        "BG_MID":   (65, 69, 89),    # #414559 Surface 0
+        "BG_LIGHT": (81, 87, 109),   # #51576d Surface 1
+        "BG_GIT":   (41, 70, 63),    # derived dark green
+        "FG_WHITE": (198, 208, 245), # #c6d0f5 Text
+        "FG_MODEL": (35, 38, 52),    # #232634 Crust dark text
+        "FG_GIT":   (166, 209, 137), # #a6d189 Green
+        "BAR_OK":   (166, 209, 137), # #a6d189 Green
+        "BAR_WARN": (229, 200, 144), # #e5c890 Yellow
+        "BAR_CRIT": (231, 130, 132), # #e78284 Red
+    },
+    "catppuccin-latte": {
+        "C_MODEL": "\033[38;2;30;102;245m",    # #1e66f5 Blue
+        "C_DIR":   "\033[38;2;76;79;105m",     # #4c4f69 Text
+        "C_DIM":   "\033[38;2;172;176;190m",   # #acb0be Surface 2
+        "C_GIT":   "\033[38;2;64;160;43m",     # #40a02b Green
+        "C_SEP":   "\033[38;2;172;176;190m",   # #acb0be Surface 2
+        "C_PCT":   "\033[38;2;92;95;119m",     # #5c5f77 Subtext 1
+        "C_OK":    "\033[38;2;64;160;43m",     # #40a02b Green
+        "C_WARN":  "\033[38;2;223;142;29m",    # #df8e1d Yellow
+        "C_CRIT":  "\033[38;2;210;15;57m",     # #d20f39 Red
+        "BG_MODEL": (30, 102, 245),  # #1e66f5 Blue accent
+        "BG_DARK":  (230, 233, 239), # #e6e9ef Mantle
+        "BG_MID":   (204, 208, 218), # #ccd0da Surface 0
+        "BG_LIGHT": (188, 192, 204), # #bcc0cc Surface 1
+        "BG_GIT":   (210, 243, 219), # derived light green
+        "FG_WHITE": (76, 79, 105),   # #4c4f69 Text (dark for light bg)
+        "FG_MODEL": (239, 241, 245), # #eff1f5 Base (light for dark bg)
+        "FG_GIT":   (64, 160, 43),   # #40a02b Green
+        "BAR_OK":   (64, 160, 43),   # #40a02b Green
+        "BAR_WARN": (223, 142, 29),  # #df8e1d Yellow
+        "BAR_CRIT": (210, 15, 57),   # #d20f39 Red
+    },
+    "catppuccin-macchiato": {
+        "C_MODEL": "\033[38;2;138;173;244m",   # #8aadf4 Blue
+        "C_DIR":   "\033[38;2;202;211;245m",   # #cad3f5 Text
+        "C_DIM":   "\033[38;2;91;96;120m",     # #5b6078 Surface 2
+        "C_GIT":   "\033[38;2;166;218;149m",   # #a6da95 Green
+        "C_SEP":   "\033[38;2;91;96;120m",     # #5b6078 Surface 2
+        "C_PCT":   "\033[38;2;184;192;224m",   # #b8c0e0 Subtext 1
+        "C_OK":    "\033[38;2;166;218;149m",   # #a6da95 Green
+        "C_WARN":  "\033[38;2;238;212;159m",   # #eed49f Yellow
+        "C_CRIT":  "\033[38;2;237;135;150m",   # #ed8796 Red
+        "BG_MODEL": (138, 173, 244), # #8aadf4 Blue accent
+        "BG_DARK":  (30, 32, 48),    # #1e2030 Mantle
+        "BG_MID":   (54, 58, 79),    # #363a4f Surface 0
+        "BG_LIGHT": (73, 77, 100),   # #494d64 Surface 1
+        "BG_GIT":   (30, 58, 51),    # derived dark green
+        "FG_WHITE": (202, 211, 245), # #cad3f5 Text
+        "FG_MODEL": (24, 25, 38),    # #181926 Crust dark text
+        "FG_GIT":   (166, 218, 149), # #a6da95 Green
+        "BAR_OK":   (166, 218, 149), # #a6da95 Green
+        "BAR_WARN": (238, 212, 159), # #eed49f Yellow
+        "BAR_CRIT": (237, 135, 150), # #ed8796 Red
     },
     "catppuccin-mocha": {
         "C_MODEL": "\033[38;2;137;180;250m",   # #89b4fa Blue

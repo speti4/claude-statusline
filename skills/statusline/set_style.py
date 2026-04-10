@@ -5,7 +5,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 FILE = os.path.join(os.path.expanduser("~"), ".claude", "statusline.py")
 
 STYLES = {"minimal", "powerline", "powerline-short"}
-SCHEMES = {"default", "banana-blueberry", "catppuccin-mocha"}
+SCHEMES = {"default", "banana-blueberry", "catppuccin-frappe", "catppuccin-latte", "catppuccin-macchiato", "catppuccin-mocha"}
 RATE_OPTS = {
     "rate-all":  "all",
     "rate-5h":   "5h",
@@ -36,7 +36,8 @@ if len(sys.argv) < 2:
     print(f"""/statusline \u2014 Configure statusline appearance
 
   Style:    minimal | powerline | powerline-short
-  Scheme:   default | banana-blueberry | catppuccin-mocha
+  Scheme:   default | banana-blueberry | catppuccin-frappe
+            | catppuccin-latte | catppuccin-macchiato | catppuccin-mocha
   Rate:     rate-all | rate-5h | rate-7d | rate-none
 
   Current:  {cur_style} \u00b7 {cur_scheme} \u00b7 rate: {cur_rate}
@@ -80,7 +81,7 @@ for var, (_, arg) in sorted(seen_vars.items(), key=lambda x: x[1][0]):
         changes.append(f"{label}: {old} \u2192 {arg}")
 
     elif arg in SCHEMES:
-        comment = '# "default" | "banana-blueberry" | "catppuccin-mocha"'
+        comment = '# "default" | "banana-blueberry" | "catppuccin-frappe" | "catppuccin-latte" | "catppuccin-macchiato" | "catppuccin-mocha"'
         old = _read_str(var)
         if old == arg:
             changes.append(f"{label}: already `{arg}`")
