@@ -5,10 +5,9 @@ from datetime import datetime, timezone
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # ── Config ──────────────────────────────────────────────────────────
-DIR_STYLE = "minimal"  # "minimal" | "powerline" | "powerline-short" | "breadcrumb"
-COLOR_SCHEME = "catppuccin-mocha"  # "banana-blueberry" | "catppuccin-mocha"
-SHOW_SESSION = True   # Show 5-hour session rate limit
-SHOW_WEEKLY = True   # Show 7-day weekly rate limit
+STYLE = "minimal"  # "minimal" | "powerline" | "powerline-short"
+COLOR_SCHEME = "default"  # "default" | "banana-blueberry" | "catppuccin-mocha"
+SHOW_RATE_LIMITS = "all"  # "all" | "5h" | "7d" | "none"
 
 # ── Data ────────────────────────────────────────────────────────────
 data = json.load(sys.stdin)
@@ -46,6 +45,28 @@ except Exception:
 
 # ── Color palettes ──────────────────────────────────────────────────
 PALETTES = {
+    "default": {
+        "C_MODEL": "\033[1m",                      # Bold
+        "C_DIR":   "\033[0m",                      # Default
+        "C_DIM":   "\033[2m",                      # Dim
+        "C_GIT":   "\033[0m",                      # Default
+        "C_SEP":   "\033[2m",                      # Dim
+        "C_PCT":   "\033[0m",                      # Default
+        "C_OK":    "\033[0m",                      # Default
+        "C_WARN":  "\033[0m",                      # Default
+        "C_CRIT":  "\033[0m",                      # Default
+        "BG_MODEL": (180, 180, 180),  # Light gray
+        "BG_DARK":  (40, 40, 40),     # Dark gray
+        "BG_MID":   (60, 60, 60),     # Mid gray
+        "BG_LIGHT": (80, 80, 80),     # Light gray
+        "BG_GIT":   (50, 50, 50),     # Dark gray
+        "FG_WHITE": (220, 220, 220),  # Near-white
+        "FG_MODEL": (30, 30, 30),     # Dark text on light bg
+        "FG_GIT":   (200, 200, 200),  # Light text
+        "BAR_OK":   (180, 180, 180),  # Gray
+        "BAR_WARN": (180, 180, 180),  # Gray
+        "BAR_CRIT": (180, 180, 180),  # Gray
+    },
     "banana-blueberry": {
         "C_MODEL": "\033[38;2;34;232;223m",    # #22E8DF neon türkiz
         "C_DIR":   "\033[38;2;241;241;241m",   # #F1F1F1 fehér
@@ -92,7 +113,7 @@ PALETTES = {
     },
 }
 
-P = PALETTES.get(COLOR_SCHEME, PALETTES["banana-blueberry"])
+P = PALETTES.get(COLOR_SCHEME, PALETTES["default"])
 C_MODEL  = P["C_MODEL"]
 C_DIR    = P["C_DIR"]
 C_DIM    = P["C_DIM"]
@@ -223,7 +244,7 @@ except Exception:
 BAR_RGB = P["BAR_OK"] if pct < 60 else P["BAR_WARN"] if pct < 80 else P["BAR_CRIT"]
 
 # ── Output ────────────────────────────────────────────────────────
-is_powerline = DIR_STYLE in ("powerline", "powerline-short")
+is_powerline = STYLE in ("powerline", "powerline-short")
 
 if is_powerline:
     segs = []
@@ -233,7 +254,7 @@ if is_powerline:
 
     # Dir segments
     path_segs = _segments(cwd)
-    if DIR_STYLE == "powerline-short":
+    if STYLE == "powerline-short":
         path_segs = [s[0] if i < len(path_segs) - 1 else s for i, s in enumerate(path_segs)]
     for i, seg in enumerate(path_segs):
         if i == 0:
@@ -253,11 +274,11 @@ if is_powerline:
     segs.append((BAR_RGB, FG_WHITE, f"{' ' * pad}{pct}%"))
 
     # Rate limit segments (powerline) — one per window, individual severity color
-    if SHOW_SESSION and rl_5h_pct:
+    if SHOW_RATE_LIMITS in ("all", "5h") and rl_5h_pct:
         _, bg5 = _rl_color(rl_5h_pct)
         r5 = _fmt_reset(rl_5h.get("resets_at"))
         segs.append((bg5, FG_WHITE, f"\uf017 {rl_5h_pct}% {r5}"))
-    if SHOW_WEEKLY and rl_7d_pct:
+    if SHOW_RATE_LIMITS in ("all", "7d") and rl_7d_pct:
         _, bg7 = _rl_color(rl_7d_pct)
         r7 = _fmt_reset(rl_7d.get("resets_at"))
         segs.append((bg7, FG_WHITE, f"\uef38 {rl_7d_pct}% {r7}"))
@@ -265,21 +286,11 @@ if is_powerline:
     print(_powerline_chain(segs))
 
 else:
-    # ── Minimal / breadcrumb output ───────────────────────────────
+    # ── Minimal output ────────────────────────────────────────────
     # Dir
     path_segs = _segments(cwd)
-    if DIR_STYLE == "breadcrumb" and path_segs:
-        parts = []
-        for i, seg in enumerate(path_segs):
-            if i == len(path_segs) - 1:
-                parts.append(f"{C_DIR}{seg}{RST}")
-            else:
-                parts.append(f"{C_DIM}{seg}{RST}")
-        thin_arrow = f" {C_DIM}\ue0b1{RST} "
-        dir_part = f"{C_DIR}\ue5ff{RST} {thin_arrow.join(parts)}"
-    else:
-        dirname = path_segs[-1] if path_segs else "?"
-        dir_part = f"{C_DIR}\ue5ff {dirname}{RST}"
+    dirname = path_segs[-1] if path_segs else "?"
+    dir_part = f"{C_DIR}\ue5ff {dirname}{RST}"
 
     # Git
     branch_part = f" {SEP} {C_GIT}\ue725 {branch_name}{RST}" if branch_name else ""
@@ -292,9 +303,9 @@ else:
     # Rate limits
     rl_part = ""
     rl_items = []
-    if SHOW_SESSION and rl_5h_pct:
+    if SHOW_RATE_LIMITS in ("all", "5h") and rl_5h_pct:
         rl_items.append(_rl_part("\uf017", rl_5h_pct, rl_5h.get("resets_at"), 5))
-    if SHOW_WEEKLY and rl_7d_pct:
+    if SHOW_RATE_LIMITS in ("all", "7d") and rl_7d_pct:
         rl_items.append(_rl_part("\uef38", rl_7d_pct, rl_7d.get("resets_at"), 168))
     if rl_items:
         rl_part = f" {SEP} {' '.join(rl_items)}"

@@ -4,20 +4,19 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 FILE = os.path.join(os.path.expanduser("~"), ".claude", "statusline.py")
 
-STYLES = {"minimal", "powerline", "powerline-short", "breadcrumb"}
-SCHEMES = {"banana-blueberry", "catppuccin-mocha"}
-TOGGLES = {
-    "show-5h": ("SHOW_SESSION", True),
-    "hide-5h": ("SHOW_SESSION", False),
-    "show-7d": ("SHOW_WEEKLY", True),
-    "hide-7d": ("SHOW_WEEKLY", False),
+STYLES = {"minimal", "powerline", "powerline-short"}
+SCHEMES = {"default", "banana-blueberry", "catppuccin-mocha"}
+RATE_OPTS = {
+    "rate-all":  "all",
+    "rate-5h":   "5h",
+    "rate-7d":   "7d",
+    "rate-none": "none",
 }
 
 FRIENDLY = {
-    "DIR_STYLE":    "Style",
+    "STYLE":        "Style",
     "COLOR_SCHEME": "Scheme",
-    "SHOW_SESSION": "5h rate limit",
-    "SHOW_WEEKLY":  "7d rate limit",
+    "SHOW_RATE_LIMITS": "Rate limits",
 }
 
 # ── Read current state ───────────────────────────────────────────
@@ -28,29 +27,22 @@ def _read_str(var):
     m = re.search(rf'{var} = "([^"]*)"', content)
     return m.group(1) if m else "?"
 
-def _read_bool(var):
-    m = re.search(rf'{var} = (True|False)', content)
-    return m.group(1) == "True" if m else True
-
-cur_style   = _read_str("DIR_STYLE")
+cur_style   = _read_str("STYLE")
 cur_scheme  = _read_str("COLOR_SCHEME")
-cur_session = _read_bool("SHOW_SESSION")
-cur_weekly  = _read_bool("SHOW_WEEKLY")
+cur_rate    = _read_str("SHOW_RATE_LIMITS")
 
 # ── No args → help with current state ────────────────────────────
 if len(sys.argv) < 2:
-    s_chk = "\u2713" if cur_session else "\u2717"
-    w_chk = "\u2713" if cur_weekly else "\u2717"
     print(f"""/statusline \u2014 Configure statusline appearance
 
-  Style:    minimal | powerline | powerline-short | breadcrumb
-  Scheme:   banana-blueberry | catppuccin-mocha
-  Rate:     show-5h | hide-5h | show-7d | hide-7d
+  Style:    minimal | powerline | powerline-short
+  Scheme:   default | banana-blueberry | catppuccin-mocha
+  Rate:     rate-all | rate-5h | rate-7d | rate-none
 
-  Current:  {cur_style} \u00b7 {cur_scheme} \u00b7 5h {s_chk} \u00b7 7d {w_chk}
+  Current:  {cur_style} \u00b7 {cur_scheme} \u00b7 rate: {cur_rate}
 
   Examples: /statusline powerline
-            /statusline hide-5h hide-7d""")
+            /statusline rate-none""")
     sys.exit(0)
 
 # ── Deduplicate: last-wins per variable ──────────────────────────
@@ -59,12 +51,11 @@ raw_args = sys.argv[1:]
 
 for i, arg in enumerate(raw_args):
     if arg in STYLES:
-        seen_vars["DIR_STYLE"] = (i, arg)
+        seen_vars["STYLE"] = (i, arg)
     elif arg in SCHEMES:
         seen_vars["COLOR_SCHEME"] = (i, arg)
-    elif arg in TOGGLES:
-        var, _ = TOGGLES[arg]
-        seen_vars[var] = (i, arg)
+    elif arg in RATE_OPTS:
+        seen_vars["SHOW_RATE_LIMITS"] = (i, arg)
     else:
         seen_vars[f"_error_{i}"] = (i, arg)
 
@@ -80,7 +71,7 @@ for var, (_, arg) in sorted(seen_vars.items(), key=lambda x: x[1][0]):
     label = FRIENDLY[var]
 
     if arg in STYLES:
-        comment = '# "minimal" | "powerline" | "powerline-short" | "breadcrumb"'
+        comment = '# "minimal" | "powerline" | "powerline-short"'
         old = _read_str(var)
         if old == arg:
             changes.append(f"{label}: already `{arg}`")
@@ -89,7 +80,7 @@ for var, (_, arg) in sorted(seen_vars.items(), key=lambda x: x[1][0]):
         changes.append(f"{label}: {old} \u2192 {arg}")
 
     elif arg in SCHEMES:
-        comment = '# "banana-blueberry" | "catppuccin-mocha"'
+        comment = '# "default" | "banana-blueberry" | "catppuccin-mocha"'
         old = _read_str(var)
         if old == arg:
             changes.append(f"{label}: already `{arg}`")
@@ -97,17 +88,15 @@ for var, (_, arg) in sorted(seen_vars.items(), key=lambda x: x[1][0]):
         content = re.sub(rf'{var} = "[^"]*".*', f'{var} = "{arg}"  {comment}', content)
         changes.append(f"{label}: {old} \u2192 {arg}")
 
-    elif arg in TOGGLES:
-        _, new_val = TOGGLES[arg]
-        comment = f"# Show {'5-hour session' if 'SESSION' in var else '7-day weekly'} rate limit"
-        old_val = _read_bool(var)
-        vis_old = "visible" if old_val else "hidden"
-        vis_new = "visible" if new_val else "hidden"
-        if old_val == new_val:
-            changes.append(f"{label}: already {vis_new}")
+    elif arg in RATE_OPTS:
+        new_val = RATE_OPTS[arg]
+        comment = '# "all" | "5h" | "7d" | "none"'
+        old = _read_str(var)
+        if old == new_val:
+            changes.append(f"{label}: already `{new_val}`")
             continue
-        content = re.sub(rf'{var} = (True|False).*', f"{var} = {new_val}   {comment}", content)
-        changes.append(f"{label}: {vis_old} \u2192 {vis_new}")
+        content = re.sub(rf'{var} = "[^"]*".*', f'{var} = "{new_val}"  {comment}', content)
+        changes.append(f"{label}: {old} \u2192 {new_val}")
 
 # ── Write once ───────────────────────────────────────────────────
 if any(not line.startswith("Unknown") for line in changes):

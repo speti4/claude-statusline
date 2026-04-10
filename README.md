@@ -4,8 +4,8 @@ Custom terminal status bar for [Claude Code](https://claude.ai/code). Displays m
 
 ## Features
 
-- **4 display styles:** minimal, powerline, powerline-short, breadcrumb
-- **2 color schemes:** Catppuccin Mocha, Banana Blueberry
+- **3 display styles:** minimal, powerline, powerline-short
+- **3 color schemes:** Default (colorless), Catppuccin Mocha, Banana Blueberry
 - **Rate limit visualization:** 5-hour session + 7-day weekly limits with fill bars and time markers
 - **Git integration:** current branch display
 - **Usage snapshot:** writes `~/.claude/usage-snapshot.json` for external tools (e.g., dashboards)
@@ -49,7 +49,7 @@ Use the `/statusline` skill in any Claude Code session:
 ```
 /statusline minimal              # switch to minimal style
 /statusline catppuccin-mocha     # switch color scheme
-/statusline show-5h hide-7d      # toggle rate limit visibility
+/statusline rate-none             # hide rate limits
 ```
 
 ## Development

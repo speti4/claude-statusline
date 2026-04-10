@@ -1,6 +1,6 @@
 # Claude Statusline
 
-Custom terminal status bar for Claude Code — Python 3 script with 4 display styles and 2 color schemes.
+Custom terminal status bar for Claude Code — Python 3 script with 3 display styles and 3 color schemes.
 
 ## Scope
 This project contains:
@@ -17,7 +17,7 @@ This project contains:
 - `usage-snapshot.json` is written to `~/.claude/` at runtime (not tracked here)
 
 ## Note on `/statusline` skill drift
-The `/statusline` skill modifies `~/.claude/statusline.py` directly (the deployed copy). Config vars (DIR_STYLE, COLOR_SCHEME, SHOW_SESSION, SHOW_WEEKLY) may drift from the repo source. After tweaking via `/statusline`, sync changes back to this repo before committing.
+The `/statusline` skill modifies `~/.claude/statusline.py` directly (the deployed copy). Config vars (STYLE, COLOR_SCHEME, SHOW_RATE_LIMITS) may drift from the repo source. After tweaking via `/statusline`, sync changes back to this repo before committing.
 
 ## Conventions
 - Language: English for code, commits, and docs
