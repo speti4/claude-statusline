@@ -12,7 +12,7 @@ SHOW_RATE_LIMITS = "all"  # "all" | "5h" | "7d" | "none"
 # ── Data ────────────────────────────────────────────────────────────
 data = json.load(sys.stdin)
 
-model = data.get("model", {}).get("display_name", "?")
+model = data.get("model", {}).get("display_name", "?").split(" (")[0]
 cwd = data.get("workspace", {}).get("current_dir", "") or data.get("cwd", "")
 pct = int(data.get("context_window", {}).get("used_percentage", 0) or 0)
 
