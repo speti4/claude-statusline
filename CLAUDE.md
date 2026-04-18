@@ -1,6 +1,6 @@
 # Claude Statusline
 
-Custom terminal status bar for Claude Code — Python 3 script with 3 display styles and 3 color schemes.
+Custom terminal status bar for Claude Code — Python 3 script with 3 display styles and 6 color schemes.
 
 ## Scope
 This project contains:
@@ -29,6 +29,3 @@ The `/statusline` skill modifies `~/.claude/statusline.py` directly (the deploye
 ## Communication
 - User communication: Hungarian (tech terms in English)
 - Code, commits, documentation: English
-
-## Pending
-- Session name display: waiting for [anthropics/claude-code#15029](https://github.com/anthropics/claude-code/issues/15029) — see `docs/session-name-plan.md`

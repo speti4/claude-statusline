@@ -5,7 +5,7 @@ Custom terminal status bar for [Claude Code](https://claude.ai/code). Displays m
 ## Features
 
 - **3 display styles:** minimal, powerline, powerline-short
-- **3 color schemes:** Default (colorless), Catppuccin Mocha, Banana Blueberry
+- **6 color schemes:** Default (colorless), Banana Blueberry, Catppuccin Frappé, Catppuccin Latte, Catppuccin Macchiato, Catppuccin Mocha
 - **Rate limit visualization:** 5-hour session + 7-day weekly limits with fill bars and time markers
 - **Git integration:** current branch display
 - **Usage snapshot:** writes `~/.claude/usage-snapshot.json` for external tools (e.g., dashboards)
@@ -32,7 +32,7 @@ Custom terminal status bar for [Claude Code](https://claude.ai/code). Displays m
 pwsh scripts/deploy.ps1
 ```
 
-This copies `statusline.py` and the skill files to `~/.claude/`. The `settings.json` statusline block must be configured separately (managed by [claude-setup](https://github.com/user/claude-setup)):
+This copies `statusline.py` and the skill files to `~/.claude/`. The `settings.json` statusline block must be configured separately (managed by the `claude-setup` project):
 
 ```json
 "statusLine": {
