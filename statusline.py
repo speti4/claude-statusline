@@ -6,7 +6,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # ── Config ──────────────────────────────────────────────────────────
 STYLE = "minimal"  # "minimal" | "powerline" | "powerline-short"
-COLOR_SCHEME = "default"  # "default" | "banana-blueberry" | "catppuccin-frappe" | "catppuccin-latte" | "catppuccin-macchiato" | "catppuccin-mocha"
+COLOR_SCHEME = "catppuccin-mocha"  # "default" | "banana-blueberry" | "catppuccin-frappe" | "catppuccin-latte" | "catppuccin-macchiato" | "catppuccin-mocha"
 SHOW_RATE_LIMITS = "all"  # "all" | "5h" | "7d" | "none"
 
 # ── Data ────────────────────────────────────────────────────────────
