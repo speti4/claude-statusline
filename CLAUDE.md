@@ -6,12 +6,13 @@ Custom terminal status bar for Claude Code — Python 3 script with 3 display st
 This project contains:
 - `statusline.py` — main statusline script (reads JSON from stdin, outputs ANSI-formatted status bar)
 - `skills/statusline/` — `/statusline` slash command for live style/scheme/rate-limit configuration
-- `scripts/deploy.ps1` — deploys files to `~/.claude/` for runtime use
+- `scripts/deploy.ps1` — deploys files to `~/.claude/` for runtime use (Windows)
+- `scripts/deploy.sh` — same, for macOS/Linux; also rewrites `python` → `python3` in the deployed `SKILL.md`
 - Task history and documentation
 
 ## Runtime Deployment
 - **This repo is the source of truth** — all edits happen here
-- Deploy: `pwsh scripts/deploy.ps1` (or `/deploy` skill when working in this repo)
+- Deploy: `pwsh scripts/deploy.ps1` (Windows) or `bash scripts/deploy.sh` (macOS/Linux), or the `/deploy` skill when working in this repo
 - Runtime location: `~/.claude/statusline.py` + `~/.claude/skills/statusline/`
 - `settings.json` statusline block is managed by the `claude-setup` project
 - `usage-snapshot.json` is written to `~/.claude/` at runtime (not tracked here)
