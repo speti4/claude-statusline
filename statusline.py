@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json, sys, subprocess, os, io
+import time as _time
 from datetime import datetime, timezone
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
@@ -10,7 +11,43 @@ COLOR_SCHEME = "catppuccin-mocha"  # "default" | "banana-blueberry" | "catppucci
 SHOW_RATE_LIMITS = "all"  # "all" | "5h" | "7d" | "none"
 
 # ── Data ────────────────────────────────────────────────────────────
-data = json.load(sys.stdin)
+# Read the payload as text before parsing it, so the debug dump below can
+# record it verbatim — json.loads() would drop key order and the exact
+# number formatting, which is precisely what a format investigation needs.
+_raw_stdin = sys.stdin.read()
+data = json.loads(_raw_stdin)
+
+# ── Optional raw-payload dump (diagnostics, off by default) ─────────
+# Claude Code documents only `rate_limits.five_hour` and `.seven_day`, but the
+# payload is whatever the client sends, not whatever the docs list. Set
+# CLAUDE_STATUSLINE_DUMP to a directory (or to "1" for the default one) and
+# every stdin payload is appended there verbatim, one JSON object per line.
+#
+# Two things to know before using it:
+#   - The env var is read when Claude Code starts, not per statusline run, so
+#     an already-running session will never dump. Open a new one.
+#   - Every concurrent session runs this script. They each get their own file,
+#     named by pid, because appends from several processes to one file
+#     interleave and produce unparseable lines (the same collision that once
+#     corrupted usage-snapshot.json).
+_dump_dir = os.environ.get("CLAUDE_STATUSLINE_DUMP", "")
+if _dump_dir:
+    try:
+        if _dump_dir in ("1", "true", "True", "yes"):
+            _dump_dir = os.path.join(os.path.expanduser("~"), ".claude", "statusline-dump")
+        os.makedirs(_dump_dir, exist_ok=True)
+        _dump_file = os.path.join(_dump_dir, "stdin-{}.jsonl".format(os.getpid()))
+        # Cap it: a forgotten dump would otherwise grow for as long as the
+        # session lives, a line every few seconds.
+        if not os.path.exists(_dump_file) or os.path.getsize(_dump_file) < 20 * 1024 * 1024:
+            _line = json.dumps(
+                {"ts": int(_time.time()), "pid": os.getpid(), "raw": _raw_stdin},
+                ensure_ascii=False,
+            )
+            with open(_dump_file, "a", encoding="utf-8") as _df:
+                _df.write(_line + "\n")
+    except Exception:
+        pass
 
 model = data.get("model", {}).get("display_name", "?").split(" (")[0]
 cwd = data.get("workspace", {}).get("current_dir", "") or data.get("cwd", "")
@@ -24,7 +61,6 @@ rl_5h_pct = int(rl_5h.get("used_percentage", 0) or 0)
 rl_7d_pct = int(rl_7d.get("used_percentage", 0) or 0)
 
 # ── Persist snapshot for dev-dashboard ──────────────────────────────
-import time as _time
 _snapshot_path = os.path.join(os.path.expanduser("~"), ".claude", "usage-snapshot.json")
 try:
     _snapshot = {

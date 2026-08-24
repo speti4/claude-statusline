@@ -75,4 +75,23 @@ Use the `/statusline` skill in any Claude Code session:
 Edit files in this repo, then deploy with the script for your platform (`deploy.ps1` on
 Windows, `deploy.sh` on macOS/Linux), or run the `/deploy` skill from within this repo.
 
+### Dumping the raw stdin payload
+
+Claude Code documents only part of what it sends the statusline, so when a question comes
+up about a field, dump the payload instead of guessing. Set `CLAUDE_STATUSLINE_DUMP` to a
+directory (or to `1` for `~/.claude/statusline-dump/`) and each invocation appends its
+stdin verbatim as one JSON line:
+
+```powershell
+$env:CLAUDE_STATUSLINE_DUMP = "1"; claude    # PowerShell
+```
+```bash
+CLAUDE_STATUSLINE_DUMP=1 claude              # bash / zsh
+```
+
+Two constraints: Claude Code reads the variable when it starts, so it has to be set
+**before** launching a session — an already-running one never dumps. And each session
+writes its own `stdin-<pid>.jsonl`, because concurrent appends to a single file
+interleave into unparseable lines. Each file stops growing at 20 MB.
+
 Color palette references are at `e:\tools\color-palettes\` on the Windows machine (not duplicated here).
