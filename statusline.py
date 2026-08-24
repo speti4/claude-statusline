@@ -36,7 +36,13 @@ try:
             "seven_day": {"used_percentage": rl_7d_pct, "resets_at": rl_7d.get("resets_at")},
         },
     }
-    _tmp = _snapshot_path + ".tmp"
+    # The temp name has to be per-process. Every concurrent Claude Code
+    # session runs this script, and with a shared usage-snapshot.json.tmp two
+    # of them interleave writes into the same file before one renames it, so
+    # the rename publishes a mixed, unparseable document. os.replace was
+    # already atomic; the collision was upstream of it. The dashboard saw
+    # this as a JSON syntax error and blanked its rate-limit gauges.
+    _tmp = "{}.{}.tmp".format(_snapshot_path, os.getpid())
     with open(_tmp, "w", encoding="utf-8") as _f:
         json.dump(_snapshot, _f)
     os.replace(_tmp, _snapshot_path)
