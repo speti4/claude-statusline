@@ -1,7 +1,7 @@
 ---
 name: deploy
-description: Deploy statusline files to ~/.claude/ for runtime use
-version: 1.1.0
+description: Deploy statusline.py to ~/.claude/ for runtime use
+version: 2.0.0
 allowed-tools:
   - Bash(pwsh scripts/deploy.ps1)
   - Bash(bash scripts/deploy.sh)
@@ -9,7 +9,7 @@ allowed-tools:
 
 # /deploy
 
-Deploy the statusline script and skill files from this repo to `~/.claude/`.
+Deploy the statusline script from this repo to `~/.claude/`.
 
 ## What it does
 Runs the deploy script for the current platform:
@@ -19,13 +19,15 @@ Runs the deploy script for the current platform:
 | Windows | `pwsh scripts/deploy.ps1` |
 | macOS / Linux | `bash scripts/deploy.sh` |
 
-Both copy:
-- `statusline.py` → `~/.claude/statusline.py`
-- `skills/statusline/*` → `~/.claude/skills/statusline/`
+Both copy `statusline.py` → `~/.claude/statusline.py`, the path the `settings.json`
+statusline command runs.
 
-On macOS and Linux, `deploy.sh` additionally rewrites `python` to `python3` in the
-deployed `SKILL.md`, since those platforms have no `python` command. The repo source
-stays Windows-targeted.
+The `/statusline` skill is **not** deployed. It is a project-level skill living in
+`.claude/skills/statusline/`, available whenever you work in this repo; the `claude-setup`
+repo keeps its own copy, produced by that repo's sync script.
 
 ## When to use
-After editing `statusline.py`, `SKILL.md`, or `set_style.py` in this repo.
+After editing `statusline.py` in this repo.
+
+Not needed after `/statusline`: that skill writes both the deployed copy and this repo's
+`statusline.py` in one go.
