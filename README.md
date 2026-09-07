@@ -15,9 +15,9 @@ Custom terminal status bar for [Claude Code](https://claude.ai/code). Displays m
 | File | Purpose |
 |------|---------|
 | `statusline.py` | Main statusline script (Python 3) |
-| `skills/statusline/SKILL.md` | `/statusline` skill definition |
-| `skills/statusline/set_style.py` | Config helper for style/scheme switching |
-| `scripts/deploy.ps1` | Deploy script — copies files to `~/.claude/` |
+| `.claude/skills/statusline/SKILL.md` | `/statusline` skill definition (project-level) |
+| `.claude/skills/statusline/set_style.py` | Config helper for style/scheme switching |
+| `scripts/deploy.ps1` | Deploy script — copies `statusline.py` to `~/.claude/` |
 
 ## Setup
 
@@ -43,12 +43,12 @@ pwsh scripts/deploy.ps1
 ```bash
 bash scripts/deploy.sh
 ```
-
-`deploy.sh` also rewrites `python` to `python3` in the deployed `SKILL.md`, since macOS
-and most Linux distros ship no `python` command. The repo source stays Windows-targeted.
 </details>
 
-This copies `statusline.py` and the skill files to `~/.claude/`. The `settings.json` statusline block must be configured separately (managed by the `claude-setup` project):
+This copies `statusline.py` to `~/.claude/`. The `/statusline` skill is not deployed — it is
+a project-level skill under `.claude/skills/`, available whenever you work in this repo. The
+`settings.json` statusline block must be configured separately (managed by the `claude-setup`
+project):
 
 ```json
 "statusLine": {
@@ -63,17 +63,22 @@ On macOS and Linux use `python3` in that command — there is no `python` execut
 
 ### Configure
 
-Use the `/statusline` skill in any Claude Code session:
+Use the `/statusline` skill from a session working in this repo:
 ```
 /statusline minimal              # switch to minimal style
 /statusline catppuccin-mocha     # switch color scheme
 /statusline rate-none             # hide rate limits
 ```
 
+It writes the deployed `~/.claude/statusline.py`, so the change shows up in the status bar
+right away, and this repo's `statusline.py` alongside it — no `/deploy` needed afterwards,
+and the two copies cannot drift apart.
+
 ## Development
 
-Edit files in this repo, then deploy with the script for your platform (`deploy.ps1` on
-Windows, `deploy.sh` on macOS/Linux), or run the `/deploy` skill from within this repo.
+Edit `statusline.py` in this repo, then deploy with the script for your platform
+(`deploy.ps1` on Windows, `deploy.sh` on macOS/Linux), or run the `/deploy` skill from
+within this repo.
 
 ### Dumping the raw stdin payload
 
