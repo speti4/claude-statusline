@@ -1,6 +1,6 @@
 # Claude Statusline
 
-Custom terminal status bar for [Claude Code](https://claude.ai/code). Displays model info, working directory, git branch, context window usage, and rate limits with color-coded ANSI output.
+Custom terminal status bar for [Claude Code](https://claude.ai/code). Displays model info, working directory, git branch and working-tree state, context window usage, and rate limits with color-coded ANSI output.
 
 ## Features
 
@@ -25,6 +25,7 @@ Custom terminal status bar for [Claude Code](https://claude.ai/code). Displays m
 - Claude Code installed
 - Python 3.x (verified on 3.9+)
 - A [Nerd Font](https://www.nerdfonts.com/) in your terminal — without one, the icons and powerline separators render as empty boxes
+- Git on `PATH` — optional; without it (or outside a repository) the git segment is simply hidden
 - PowerShell 7+ — Windows only, for `deploy.ps1`
 
 ### Deploy
