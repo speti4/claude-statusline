@@ -16,6 +16,6 @@ Glyphs (plain Unicode): `●` staged, `✚` modified (incl. unmerged), `?` untra
 - [x] Render the counters inside the powerline git segment
 - [x] Update README feature list
 - [x] Verify: clean, dirty, ahead, non-git dir, both styles
-- [ ] Merge to main, push, deploy
+- [x] Merge to main, push, deploy
 
-## Status: WIP
+## Status: DONE
