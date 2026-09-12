@@ -338,15 +338,53 @@ def _rl_part(icon, pct, reset_iso, window_hours):
     reset_part = f" {C_DIM}{reset_str}{RST}" if reset_str else ""
     return f"{color}{icon} {pct}%{RST} {bar}{reset_part}"
 
-# ── Git branch ────────────────────────────────────────────────────
+# ── Git branch + working-tree state ───────────────────────────────
+# One `git status` call gives the branch, ahead/behind and every changed path.
+# GIT_OPTIONAL_LOCKS=0 keeps this every-few-seconds call from touching the
+# index lock, so it never fights a git command the user is running.
 branch_name = ""
+git_staged = git_modified = git_untracked = git_ahead = git_behind = 0
 try:
-    subprocess.check_output(["git", "rev-parse", "--git-dir"], stderr=subprocess.DEVNULL)
-    branch_name = subprocess.check_output(
-        ["git", "branch", "--show-current"], text=True, stderr=subprocess.DEVNULL
-    ).strip()
+    _status = subprocess.check_output(
+        ["git", "status", "--porcelain=v2", "--branch"],
+        text=True, encoding="utf-8", errors="replace",
+        stderr=subprocess.DEVNULL, timeout=3,
+        cwd=cwd if cwd and os.path.isdir(cwd) else None,
+        env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"},
+    )
+    for _line in _status.splitlines():
+        if _line.startswith("# branch.head "):
+            _head = _line[len("# branch.head "):]
+            branch_name = "" if _head == "(detached)" else _head
+        elif _line.startswith("# branch.ab "):
+            _ab = _line.split()
+            git_ahead, git_behind = int(_ab[2]), abs(int(_ab[3]))
+        elif _line[:1] in ("1", "2"):
+            _xy = _line.split(" ", 2)[1]
+            if _xy[0] != ".":
+                git_staged += 1
+            if _xy[1] != ".":
+                git_modified += 1
+        elif _line.startswith("u "):
+            git_modified += 1
+        elif _line.startswith("? "):
+            git_untracked += 1
 except Exception:
-    pass
+    branch_name = ""
+
+def _git_status_text(c_dirty="", c_sync=""):
+    """Non-zero counters in fixed order: ● staged ✚ modified ? untracked ↑ ahead ↓ behind.
+
+    Returns "" for a clean, in-sync tree so that case renders as before.
+    """
+    items = []
+    for glyph, n in (("●", git_staged), ("✚", git_modified), ("?", git_untracked)):
+        if n:
+            items.append(f"{c_dirty}{glyph}{n}")
+    for glyph, n in (("↑", git_ahead), ("↓", git_behind)):
+        if n:
+            items.append(f"{c_sync}{glyph}{n}")
+    return " ".join(items)
 
 # ── Context ───────────────────────────────────────────────────────
 BAR_RGB = P["BAR_OK"] if pct < 60 else P["BAR_WARN"] if pct < 80 else P["BAR_CRIT"]
@@ -375,7 +413,8 @@ if is_powerline:
 
     # Git segment
     if branch_name:
-        segs.append((BG_GIT, FG_GIT, f"\ue725 {branch_name}"))
+        git_state = _git_status_text()
+        segs.append((BG_GIT, FG_GIT, f"\ue725 {branch_name}" + (f" {git_state}" if git_state else "")))
 
     # Context segment (dynamic width)
     pad = max(1, pct * 8 // 100)
@@ -401,7 +440,10 @@ else:
     dir_part = f"{C_DIR}\ue5ff {dirname}{RST}"
 
     # Git
-    branch_part = f" {SEP} {C_GIT}\ue725 {branch_name}{RST}" if branch_name else ""
+    branch_part = ""
+    if branch_name:
+        git_state = _git_status_text(c_dirty=C_WARN, c_sync=C_GIT)
+        branch_part = f" {SEP} {C_GIT}\ue725 {branch_name}{RST}" + (f" {git_state}{RST}" if git_state else "")
 
     # Context (block bar)
     bar_fg = _fg(*BAR_RGB)
