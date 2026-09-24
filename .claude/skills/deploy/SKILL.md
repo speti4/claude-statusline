@@ -23,8 +23,7 @@ Both copy `statusline.py` → `~/.claude/statusline.py`, the path the `settings.
 statusline command runs.
 
 The `/statusline` skill is **not** deployed. It is a project-level skill living in
-`.claude/skills/statusline/`, available whenever you work in this repo; the `claude-setup`
-repo keeps its own copy, produced by that repo's sync script.
+`.claude/skills/statusline/`, available whenever you work in this repo.
 
 ## When to use
 After editing `statusline.py` in this repo.
