@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-09-24
+
+### Fixed
+
+- Powerline styles: the context and rate-limit segments were hard to read — light text on a light
+  green / yellow / red background in the dark schemes. Their text color is now chosen per
+  segment for the higher contrast (WCAG ratio ≥ 4.5 in every scheme)
+- Catppuccin Latte, powerline styles: darker green for the git segment text
+
 ## [0.1.0] - 2026-09-16
 
 First public release.
@@ -22,4 +31,5 @@ First public release.
 - `/deploy` skill and deploy scripts for Windows (`scripts/deploy.ps1`) and macOS/Linux (`scripts/deploy.sh`)
 - Optional raw stdin dump (`CLAUDE_STATUSLINE_DUMP`) for inspecting the payload Claude Code sends
 
+[0.1.1]: https://github.com/speti4/claude-statusline/releases/tag/v0.1.1
 [0.1.0]: https://github.com/speti4/claude-statusline/releases/tag/v0.1.0

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 # ── Config ──────────────────────────────────────────────────────────
 STYLE = "minimal"  # "minimal" | "powerline" | "powerline-short"
@@ -110,6 +110,7 @@ PALETTES = {
         "BAR_OK":   (180, 180, 180),  # Gray
         "BAR_WARN": (180, 180, 180),  # Gray
         "BAR_CRIT": (180, 180, 180),  # Gray
+        "FG_ON_BAR": ((30, 30, 30), (220, 220, 220)),  # (dark, light) text on BAR_* segments
     },
     "banana-blueberry": {
         "C_MODEL": "\033[38;2;34;232;223m",    # #22E8DF neon türkiz
@@ -132,6 +133,7 @@ PALETTES = {
         "BAR_OK":   (0, 189, 156),   # #00BD9C
         "BAR_WARN": (230, 198, 47),  # #E6C62F
         "BAR_CRIT": (255, 107, 127), # #FF6B7F
+        "FG_ON_BAR": ((23, 20, 31), (241, 241, 241)),  # #17141F / #F1F1F1
     },
     "catppuccin-frappe": {
         "C_MODEL": "\033[38;2;140;170;238m",   # #8caaee Blue
@@ -154,6 +156,7 @@ PALETTES = {
         "BAR_OK":   (166, 209, 137), # #a6d189 Green
         "BAR_WARN": (229, 200, 144), # #e5c890 Yellow
         "BAR_CRIT": (231, 130, 132), # #e78284 Red
+        "FG_ON_BAR": ((35, 38, 52), (198, 208, 245)),  # Crust / Text
     },
     "catppuccin-latte": {
         "C_MODEL": "\033[38;2;30;102;245m",    # #1e66f5 Blue
@@ -172,10 +175,13 @@ PALETTES = {
         "BG_GIT":   (210, 243, 219), # derived light green
         "FG_WHITE": (76, 79, 105),   # #4c4f69 Text (dark for light bg)
         "FG_MODEL": (239, 241, 245), # #eff1f5 Base (light for dark bg)
-        "FG_GIT":   (64, 160, 43),   # #40a02b Green
+        "FG_GIT":   (32, 96, 20),    # derived dark green, readable on BG_GIT
         "BAR_OK":   (64, 160, 43),   # #40a02b Green
         "BAR_WARN": (223, 142, 29),  # #df8e1d Yellow
         "BAR_CRIT": (210, 15, 57),   # #d20f39 Red
+        # Near-black rather than Latte's Text: no Latte color is dark enough to read on
+        # its mid-tone Green and Yellow.
+        "FG_ON_BAR": ((17, 17, 27), (239, 241, 245)),  # #11111b / Base
     },
     "catppuccin-macchiato": {
         "C_MODEL": "\033[38;2;138;173;244m",   # #8aadf4 Blue
@@ -198,6 +204,7 @@ PALETTES = {
         "BAR_OK":   (166, 218, 149), # #a6da95 Green
         "BAR_WARN": (238, 212, 159), # #eed49f Yellow
         "BAR_CRIT": (237, 135, 150), # #ed8796 Red
+        "FG_ON_BAR": ((24, 25, 38), (202, 211, 245)),  # Crust / Text
     },
     "catppuccin-mocha": {
         "C_MODEL": "\033[38;2;137;180;250m",   # #89b4fa Blue
@@ -220,6 +227,7 @@ PALETTES = {
         "BAR_OK":   (166, 227, 161), # #a6e3a1 Green
         "BAR_WARN": (249, 226, 175), # #f9e2af Yellow
         "BAR_CRIT": (243, 139, 168), # #f38ba8 Red
+        "FG_ON_BAR": ((17, 17, 27), (205, 214, 244)),  # Crust / Text
     },
 }
 
@@ -251,6 +259,26 @@ def _fg(r, g, b):
 
 def _bg(r, g, b):
     return f"\033[48;2;{r};{g};{b}m"
+
+def _luminance(rgb):
+    """WCAG relative luminance of an (r, g, b) color."""
+    def ch(v):
+        v /= 255
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = rgb
+    return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b)
+
+def _on_bar(bg):
+    """Text color for a BAR_* background: whichever FG_ON_BAR color contrasts more.
+
+    The bar colors run from dark to light within one scheme (Latte's Red vs its
+    Yellow), so a single fixed text color cannot stay readable on all of them.
+    """
+    bg_lum = _luminance(bg)
+    def contrast(fg):
+        hi, lo = sorted((_luminance(fg), bg_lum), reverse=True)
+        return (hi + 0.05) / (lo + 0.05)
+    return max(P["FG_ON_BAR"], key=contrast)
 
 def _segments(path):
     return [s for s in path.replace("\\", "/").split("/") if s]
@@ -420,17 +448,17 @@ if is_powerline:
 
     # Context segment (dynamic width)
     pad = max(1, pct * 8 // 100)
-    segs.append((BAR_RGB, FG_WHITE, f"{' ' * pad}{pct}%"))
+    segs.append((BAR_RGB, _on_bar(BAR_RGB), f"{' ' * pad}{pct}%"))
 
     # Rate limit segments (powerline) — one per window, individual severity color
     if SHOW_RATE_LIMITS in ("all", "5h") and rl_5h_pct:
         _, bg5 = _rl_color(rl_5h_pct)
         r5 = _fmt_reset(rl_5h.get("resets_at"))
-        segs.append((bg5, FG_WHITE, f"\uf017 {rl_5h_pct}% {r5}"))
+        segs.append((bg5, _on_bar(bg5), f"\uf017 {rl_5h_pct}% {r5}"))
     if SHOW_RATE_LIMITS in ("all", "7d") and rl_7d_pct:
         _, bg7 = _rl_color(rl_7d_pct)
         r7 = _fmt_reset(rl_7d.get("resets_at"))
-        segs.append((bg7, FG_WHITE, f"\uef38 {rl_7d_pct}% {r7}"))
+        segs.append((bg7, _on_bar(bg7), f"\uef38 {rl_7d_pct}% {r7}"))
 
     print(_powerline_chain(segs))
 
