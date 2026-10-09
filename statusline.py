@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 # ── Config ──────────────────────────────────────────────────────────
 STYLE = "minimal"  # "minimal" | "powerline" | "powerline-short"
@@ -18,6 +18,11 @@ SHOW_RATE_LIMITS = "all"  # "all" | "5h" | "7d" | "none"
 # number formatting, which is precisely what a format investigation needs.
 _raw_stdin = sys.stdin.read()
 data = json.loads(_raw_stdin)
+
+# Claude Code's config dir: CLAUDE_CONFIG_DIR when set (one per profile, e.g. a
+# second account), ~/.claude otherwise. Everything this script writes goes
+# under it, so profiles sharing this script don't overwrite each other's files.
+_config_dir = os.path.expanduser(os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join("~", ".claude"))
 
 # ── Optional raw-payload dump (diagnostics, off by default) ─────────
 # Claude Code documents only `rate_limits.five_hour` and `.seven_day`, but the
@@ -36,7 +41,7 @@ _dump_dir = os.environ.get("CLAUDE_STATUSLINE_DUMP", "")
 if _dump_dir:
     try:
         if _dump_dir in ("1", "true", "True", "yes"):
-            _dump_dir = os.path.join(os.path.expanduser("~"), ".claude", "statusline-dump")
+            _dump_dir = os.path.join(_config_dir, "statusline-dump")
         os.makedirs(_dump_dir, exist_ok=True)
         _dump_file = os.path.join(_dump_dir, "stdin-{}.jsonl".format(os.getpid()))
         # Cap it: a forgotten dump would otherwise grow for as long as the
@@ -63,7 +68,40 @@ rl_5h_pct = int(rl_5h.get("used_percentage", 0) or 0)
 rl_7d_pct = int(rl_7d.get("used_percentage", 0) or 0)
 
 # ── Persist snapshot for dev-dashboard ──────────────────────────────
-_snapshot_path = os.path.join(os.path.expanduser("~"), ".claude", "usage-snapshot.json")
+_snapshot_path = os.path.join(_config_dir, "usage-snapshot.json")
+
+# Which account the rate limits belong to. The payload doesn't say, so it comes
+# from the profile's .claude.json (inside CLAUDE_CONFIG_DIR, or ~/.claude.json
+# in the home root by default). Only the organization's id, type and tier go
+# in the snapshot: enough for a reader to tell accounts apart, nothing personal.
+# Not the organization name either: a personal plan's is "<email>'s Organization".
+_claude_json = (
+    os.path.join(_config_dir, ".claude.json") if os.environ.get("CLAUDE_CONFIG_DIR")
+    else os.path.join(os.path.expanduser("~"), ".claude.json")
+)
+_account = None
+try:
+    with open(_claude_json, encoding="utf-8") as _f:
+        _oauth = json.load(_f).get("oauthAccount") or {}
+    if _oauth.get("organizationUuid"):
+        _account = {
+            "org_uuid": _oauth.get("organizationUuid"),
+            "org_type": _oauth.get("organizationType"),
+            # A Team seat has its own tier; the organization's is the fallback.
+            "rate_limit_tier": _oauth.get("userRateLimitTier") or _oauth.get("organizationRateLimitTier"),
+        }
+except FileNotFoundError:
+    pass
+except Exception:
+    # Claude Code rewrites .claude.json while sessions run, so a read can catch
+    # it half-written. Keep the account from the last snapshot instead of
+    # flapping to null for one refresh.
+    try:
+        with open(_snapshot_path, encoding="utf-8") as _f:
+            _account = json.load(_f).get("account")
+    except Exception:
+        pass
+
 try:
     _snapshot = {
         "timestamp": int(_time.time()),
@@ -73,6 +111,7 @@ try:
             "five_hour": {"used_percentage": rl_5h_pct, "resets_at": rl_5h.get("resets_at")},
             "seven_day": {"used_percentage": rl_7d_pct, "resets_at": rl_7d.get("resets_at")},
         },
+        "account": _account,
     }
     # The temp name has to be per-process. Every concurrent Claude Code
     # session runs this script, and with a shared usage-snapshot.json.tmp two
@@ -81,9 +120,16 @@ try:
     # already atomic; the collision was upstream of it. The dashboard saw
     # this as a JSON syntax error and blanked its rate-limit gauges.
     _tmp = "{}.{}.tmp".format(_snapshot_path, os.getpid())
-    with open(_tmp, "w", encoding="utf-8") as _f:
-        json.dump(_snapshot, _f)
-    os.replace(_tmp, _snapshot_path)
+    try:
+        with open(_tmp, "w", encoding="utf-8") as _f:
+            json.dump(_snapshot, _f)
+        os.replace(_tmp, _snapshot_path)
+    finally:
+        # On Windows the rename fails while another process holds the target
+        # open (a reader, a file sync). Skip this refresh, but don't leave the
+        # temp file behind: every failure would add one.
+        if os.path.exists(_tmp):
+            os.remove(_tmp)
 except Exception:
     pass
 

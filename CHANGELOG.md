@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-10-09
+
+### Added
+
+- `usage-snapshot.json` has an `account` field — organization id, type and rate-limit tier, read
+  from the profile's `.claude.json` — so a reader can tell which account the rate limits belong
+  to. `null` when no account is logged in
+
+### Fixed
+
+- The usage snapshot and the default stdin dump directory now follow `CLAUDE_CONFIG_DIR`. Before,
+  every profile wrote `~/.claude/usage-snapshot.json`, so with two accounts the last session to
+  refresh overwrote the other's rate limits
+- A failed snapshot rename (Windows, target held open by another process) no longer leaves a
+  `usage-snapshot.json.<pid>.tmp` file behind
+
 ## [0.1.1] - 2026-09-24
 
 ### Fixed
@@ -31,5 +47,6 @@ First public release.
 - `/deploy` skill and deploy scripts for Windows (`scripts/deploy.ps1`) and macOS/Linux (`scripts/deploy.sh`)
 - Optional raw stdin dump (`CLAUDE_STATUSLINE_DUMP`) for inspecting the payload Claude Code sends
 
+[0.2.0]: https://github.com/speti4/claude-statusline/releases/tag/v0.2.0
 [0.1.1]: https://github.com/speti4/claude-statusline/releases/tag/v0.1.1
 [0.1.0]: https://github.com/speti4/claude-statusline/releases/tag/v0.1.0

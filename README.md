@@ -169,9 +169,23 @@ system (`python` vs `python3`).
 
 ## Usage snapshot
 
-On every refresh the script also writes `~/.claude/usage-snapshot.json` — model, context usage
-and both rate limits with their reset times — so other tools (a dashboard, a tray widget) can
-read your current usage without talking to Claude Code.
+On every refresh the script also writes `usage-snapshot.json` — model, context usage and both
+rate limits with their reset times — so other tools (a dashboard, a tray widget) can read your
+current usage without talking to Claude Code:
+
+```json
+{"timestamp": 1791544601, "model": "Opus 5.5", "context_window_pct": 6,
+ "rate_limits": {"five_hour": {"used_percentage": 1, "resets_at": 1791561600},
+                 "seven_day": {"used_percentage": 3, "resets_at": 1791824400}},
+ "account": {"org_uuid": "…", "org_type": "claude_max",
+             "rate_limit_tier": "default_claude_max_20x"}}
+```
+
+The file goes to Claude Code's config directory: `$CLAUDE_CONFIG_DIR` when set, `~/.claude/`
+otherwise. If you run several profiles (say, a personal and a work account, each with its own
+`CLAUDE_CONFIG_DIR`), each one keeps its own snapshot. `account` identifies the organization the
+rate limits belong to, read from the profile's `.claude.json`; it is `null` when there is no
+logged-in account (API key users).
 
 ## Development
 
@@ -193,7 +207,7 @@ this repo) to update the copy Claude Code runs.
 
 Claude Code documents only part of what it sends the statusline, so when a question comes
 up about a field, dump the payload instead of guessing. Set `CLAUDE_STATUSLINE_DUMP` to a
-directory (or to `1` for `~/.claude/statusline-dump/`) and each invocation appends its
+directory (or to `1` for `statusline-dump/` in the config directory) and each invocation appends its
 stdin verbatim as one JSON line:
 
 ```powershell
