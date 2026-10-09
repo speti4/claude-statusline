@@ -207,8 +207,8 @@ this repo) to update the copy Claude Code runs.
 
 Claude Code documents only part of what it sends the statusline, so when a question comes
 up about a field, dump the payload instead of guessing. Set `CLAUDE_STATUSLINE_DUMP` to a
-directory (or to `1` for `statusline-dump/` in the config directory) and each invocation appends its
-stdin verbatim as one JSON line:
+directory (or to `1` for `statusline-dump/` in the config directory) and each invocation
+appends its stdin verbatim as one JSON line:
 
 ```powershell
 $env:CLAUDE_STATUSLINE_DUMP = "1"; claude    # PowerShell

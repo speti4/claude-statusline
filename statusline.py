@@ -67,7 +67,7 @@ rl_7d = rate_limits.get("seven_day", {}) or {}
 rl_5h_pct = int(rl_5h.get("used_percentage", 0) or 0)
 rl_7d_pct = int(rl_7d.get("used_percentage", 0) or 0)
 
-# ── Persist snapshot for dev-dashboard ──────────────────────────────
+# ── Persist snapshot for external tools ─────────────────────────────
 _snapshot_path = os.path.join(_config_dir, "usage-snapshot.json")
 
 # Which account the rate limits belong to. The payload doesn't say, so it comes
