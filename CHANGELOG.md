@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-11
+
+### Added
+
+- Profile tag, for people who run more than one Claude Code account: an icon for the account
+  type (Team / Enterprise or an individual plan) and the name of the profile's config dir
+  (`CLAUDE_CONFIG_DIR` without the `.claude-` prefix, so `~/.claude-work` shows as `work`),
+  right after the model in every style. Off by default — `SHOW_PROFILE_TAG`, or
+  `/statusline profile-all | profile-icon | profile-name | profile-none`
+
+### Changed
+
+- The deploy scripts carry the settings (`STYLE`, `COLOR_SCHEME`, `SHOW_RATE_LIMITS`,
+  `SHOW_PROFILE_TAG`) over from the copy already deployed, so updating no longer resets them
+- `/statusline` reports a setting the deployed copy does not have yet, instead of silently
+  skipping it
+
 ## [0.2.0] - 2026-10-09
 
 ### Added
@@ -47,6 +64,7 @@ First public release.
 - `/deploy` skill and deploy scripts for Windows (`scripts/deploy.ps1`) and macOS/Linux (`scripts/deploy.sh`)
 - Optional raw stdin dump (`CLAUDE_STATUSLINE_DUMP`) for inspecting the payload Claude Code sends
 
+[0.3.0]: https://github.com/speti4/claude-statusline/releases/tag/v0.3.0
 [0.2.0]: https://github.com/speti4/claude-statusline/releases/tag/v0.2.0
 [0.1.1]: https://github.com/speti4/claude-statusline/releases/tag/v0.1.1
 [0.1.0]: https://github.com/speti4/claude-statusline/releases/tag/v0.1.0

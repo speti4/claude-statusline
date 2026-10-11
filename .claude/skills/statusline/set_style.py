@@ -3,6 +3,7 @@
 import sys, re, io, os
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # ── Targets ──────────────────────────────────────────────────────
 # The deployed copy is what settings.json runs, so it is always written — that is
@@ -42,16 +43,24 @@ RATE_OPTS = {
     "rate-7d":   "7d",
     "rate-none": "none",
 }
+PROFILE_OPTS = {
+    "profile-all":  "all",
+    "profile-icon": "icon",
+    "profile-name": "name",
+    "profile-none": "none",
+}
 
 FRIENDLY = {
     "STYLE":        "Style",
     "COLOR_SCHEME": "Scheme",
     "SHOW_RATE_LIMITS": "Rate limits",
+    "SHOW_PROFILE_TAG": "Profile tag",
 }
 
-STYLE_COMMENT  = '# "minimal" | "powerline" | "powerline-short"'
-SCHEME_COMMENT = '# "default" | "banana-blueberry" | "catppuccin-frappe" | "catppuccin-latte" | "catppuccin-macchiato" | "catppuccin-mocha"'
-RATE_COMMENT   = '# "all" | "5h" | "7d" | "none"'
+STYLE_COMMENT   = '# "minimal" | "powerline" | "powerline-short"'
+SCHEME_COMMENT  = '# "default" | "banana-blueberry" | "catppuccin-frappe" | "catppuccin-latte" | "catppuccin-macchiato" | "catppuccin-mocha"'
+RATE_COMMENT    = '# "all" | "5h" | "7d" | "none"'
+PROFILE_COMMENT = '# "none" | "icon" | "name" | "all"'
 
 # ── Read current state ───────────────────────────────────────────
 with open(TARGETS[0], "r", encoding="utf-8") as f:
@@ -64,6 +73,7 @@ def _read_str(var):
 cur_style   = _read_str("STYLE")
 cur_scheme  = _read_str("COLOR_SCHEME")
 cur_rate    = _read_str("SHOW_RATE_LIMITS")
+cur_profile = _read_str("SHOW_PROFILE_TAG")
 
 # ── No args → help with current state ────────────────────────────
 if len(sys.argv) < 2:
@@ -73,11 +83,13 @@ if len(sys.argv) < 2:
   Scheme:   default | banana-blueberry | catppuccin-frappe
             | catppuccin-latte | catppuccin-macchiato | catppuccin-mocha
   Rate:     rate-all | rate-5h | rate-7d | rate-none
+  Profile:  profile-all | profile-icon | profile-name | profile-none
 
-  Current:  {cur_style} · {cur_scheme} · rate: {cur_rate}
+  Current:  {cur_style} · {cur_scheme} · rate: {cur_rate} · profile: {cur_profile}
 
   Examples: /statusline powerline
-            /statusline rate-none""")
+            /statusline rate-none
+            /statusline profile-all""")
     sys.exit(0)
 
 # ── Deduplicate: last-wins per variable ──────────────────────────
@@ -91,6 +103,8 @@ for i, arg in enumerate(raw_args):
         seen_vars["COLOR_SCHEME"] = (i, arg)
     elif arg in RATE_OPTS:
         seen_vars["SHOW_RATE_LIMITS"] = (i, arg)
+    elif arg in PROFILE_OPTS:
+        seen_vars["SHOW_PROFILE_TAG"] = (i, arg)
     else:
         seen_vars[f"_error_{i}"] = (i, arg)
 
@@ -110,8 +124,10 @@ for var, (_, arg) in sorted(seen_vars.items(), key=lambda x: x[1][0]):
         new_val, comment = arg, STYLE_COMMENT
     elif arg in SCHEMES:
         new_val, comment = arg, SCHEME_COMMENT
-    else:
+    elif arg in RATE_OPTS:
         new_val, comment = RATE_OPTS[arg], RATE_COMMENT
+    else:
+        new_val, comment = PROFILE_OPTS[arg], PROFILE_COMMENT
 
     old = _read_str(var)
     if old == new_val:
@@ -129,16 +145,26 @@ if subs:
     for target in TARGETS:
         with open(target, "r", encoding="utf-8") as f:
             text = f.read()
+        applied = 0
         for var, new_val, comment in subs:
-            text = re.sub(rf'{var} = "[^"]*".*', f'{var} = "{new_val}"  {comment}', text)
-        with open(target, "w", encoding="utf-8") as f:
-            f.write(text)
-        written += 1
+            # A copy older than the setting has no line to rewrite. Say so
+            # instead of claiming the change took effect.
+            if not re.search(rf'^{var} = "', text, re.M):
+                errors.append(f"{var} not found in {target} — that copy predates the setting, deploy the current statusline.py first")
+                continue
+            text = re.sub(rf'^{var} = "[^"]*".*', f'{var} = "{new_val}"  {comment}', text, count=1, flags=re.M)
+            applied += 1
+        if applied:
+            with open(target, "w", encoding="utf-8") as f:
+                f.write(text)
+            written += 1
 
 for line in changes:
     print(line)
 if written > 1:
     print(f"Written to {written} files (deployed + repo source)")
+elif written and len(TARGETS) > 1:
+    print(f"Written to 1 of {len(TARGETS)} files")
 for line in errors:
     print(line, file=sys.stderr)
     print(line)  # also to stdout so Claude sees it

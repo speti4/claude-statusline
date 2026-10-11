@@ -12,6 +12,7 @@ rate limits — in one line, updated every few seconds.
 - **6 color schemes:** Default (colorless), Banana Blueberry, Catppuccin Frappé, Catppuccin Latte, Catppuccin Macchiato, Catppuccin Mocha
 - **Rate limits at a glance:** 5-hour session and 7-day weekly usage, with a fill bar, an elapsed-time marker and a reset countdown
 - **Git state:** branch plus staged / modified / untracked counts and ahead / behind upstream
+- **Profile tag** (optional): which Claude Code profile the session runs on, for people with more than one account — see [Profile tag](#profile-tag)
 - **One file, no dependencies:** a single Python 3 script using only the standard library
 - **`/statusline` skill** to switch style, scheme and rate-limit visibility from inside Claude Code
 
@@ -22,6 +23,7 @@ From left to right:
 | Segment | Shows |
 |---------|-------|
 | Model | The model of the current session, e.g. `Opus 5.5` |
+| Profile tag | Off by default. An icon for the account type and the name of the profile's config dir, e.g. `󰡉 work` — see [Profile tag](#profile-tag) |
 | Directory | The working directory — just its name in `minimal`, the full path in `powerline`, the full path with abbreviated parent folders in `powerline-short` |
 | Git | Current branch, then only the counters that are non-zero: `●` staged, `✚` modified, `?` untracked, `↑` commits ahead of and `↓` behind upstream. Hidden outside a git repository |
 | Context | How full the context window is |
@@ -57,6 +59,24 @@ The screenshot above shows the three styles. Every scheme works with every style
 </details>
 
 `catppuccin-latte` is the light scheme; the others are made for dark terminal backgrounds.
+
+## Profile tag
+
+If you run more than one Claude Code account — say a personal plan in `~/.claude` and a Team
+seat in `~/.claude-work`, picked per terminal with `CLAUDE_CONFIG_DIR` — nothing on screen says
+which one a session is on. The profile tag does, right after the model:
+
+![Profile tag](docs/images/profile-tag.png)
+
+- **Icon** — the account type, read from the profile's `.claude.json`: `󰡉` for a Team or
+  Enterprise organization, `󰀄` for an individual plan (Pro, Max). Hidden when no account is
+  logged in.
+- **Name** — the folder name of `CLAUDE_CONFIG_DIR` without its `.claude-` prefix, so
+  `~/.claude-work` shows as `work`. Hidden for the default profile (`CLAUDE_CONFIG_DIR` not set).
+
+The tag is off by default. `/statusline profile-all` turns both parts on, `profile-icon` and
+`profile-name` show one of them, `profile-none` hides the tag again (`SHOW_PROFILE_TAG` in the
+script).
 
 ## Install
 
@@ -121,27 +141,32 @@ countdowns and time markers moving while the session is idle.
 /statusline catppuccin-latte     # scheme: default | banana-blueberry | catppuccin-frappe
                                  #         catppuccin-latte | catppuccin-macchiato | catppuccin-mocha
 /statusline rate-5h              # rate limits: rate-all | rate-5h | rate-7d | rate-none
+/statusline profile-all          # profile tag: profile-all | profile-icon | profile-name | profile-none
 /statusline powerline rate-none  # several at once
 ```
 
 The change shows up in the status bar right away.
 
-**By hand** — edit the three settings at the top of `~/.claude/statusline.py`:
+**By hand** — edit the four settings at the top of `~/.claude/statusline.py`:
 
 ```python
 STYLE = "minimal"
 COLOR_SCHEME = "catppuccin-mocha"
 SHOW_RATE_LIMITS = "all"
+SHOW_PROFILE_TAG = "none"
 ```
 
-These three values above are the defaults the script ships with.
+These four values above are the defaults the script ships with.
 
 ### Updating
 
-- **Option A:** `git pull`, then run the deploy script again. Your settings live in
-  `statusline.py` itself, and `/statusline` writes them into the repository copy too, so if
-  `git pull` refuses because of local changes, run `git stash`, `git pull`, `git stash pop`.
-- **Option B:** download the script again and re-apply your three settings.
+Either way, finish by running the deploy script: it carries your settings over from the copy
+already in `~/.claude/`, so there is nothing to re-apply.
+
+- **Option A:** `git pull`, then deploy. `/statusline` writes your settings into the repository
+  copy too, so if `git pull` refuses because of local changes, discard them first with
+  `git checkout -- statusline.py` — the deploy script restores them from the deployed copy.
+- **Option B:** download the script again, then deploy.
 
 See [CHANGELOG.md](CHANGELOG.md) for what changed in each release.
 

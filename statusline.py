@@ -5,12 +5,13 @@ from datetime import datetime, timezone
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 # ── Config ──────────────────────────────────────────────────────────
 STYLE = "minimal"  # "minimal" | "powerline" | "powerline-short"
 COLOR_SCHEME = "catppuccin-mocha"  # "default" | "banana-blueberry" | "catppuccin-frappe" | "catppuccin-latte" | "catppuccin-macchiato" | "catppuccin-mocha"
 SHOW_RATE_LIMITS = "all"  # "all" | "5h" | "7d" | "none"
+SHOW_PROFILE_TAG = "none"  # "none" | "icon" | "name" | "all"
 
 # ── Data ────────────────────────────────────────────────────────────
 # Read the payload as text before parsing it, so the debug dump below can
@@ -132,6 +133,40 @@ try:
             os.remove(_tmp)
 except Exception:
     pass
+
+# ── Profile tag ─────────────────────────────────────────────────────
+# Which profile this session runs on, for people who run more than one (a
+# personal and a work account, each with its own CLAUDE_CONFIG_DIR). Two parts:
+#   - an icon for the account type (team / enterprise vs. an individual plan),
+#   - the config dir's folder name without its ".claude-" prefix, so
+#     ~/.claude-work shows as "work". The organization name would be more
+#     telling, but a personal plan's is "<email>'s Organization": the folder
+#     name is the user's own choice and never personal.
+# The default profile (no CLAUDE_CONFIG_DIR) has no name, only the icon.
+_profile_name = ""
+_env_config_dir = (os.environ.get("CLAUDE_CONFIG_DIR") or "").strip()
+if _env_config_dir:
+    _profile_name = os.path.basename(os.path.normpath(os.path.expanduser(_env_config_dir)))
+    if _profile_name.startswith(".claude-"):
+        _profile_name = _profile_name[len(".claude-"):]
+    elif _profile_name == ".claude":
+        _profile_name = ""
+    _profile_name = _profile_name.strip()
+
+_org_type = ((_account or {}).get("org_type") or "").lower()
+if not _org_type:
+    _profile_icon = ""
+elif "team" in _org_type or "enterprise" in _org_type:
+    _profile_icon = "\U000F0849"  # nf-md-account_group
+else:
+    _profile_icon = "\U000F0004"  # nf-md-account
+
+_tag_parts = []
+if SHOW_PROFILE_TAG in ("icon", "all"):
+    _tag_parts.append(_profile_icon)
+if SHOW_PROFILE_TAG in ("name", "all"):
+    _tag_parts.append(_profile_name)
+profile_tag = " ".join(p for p in _tag_parts if p)
 
 # ── Color palettes ──────────────────────────────────────────────────
 PALETTES = {
@@ -306,6 +341,10 @@ def _fg(r, g, b):
 def _bg(r, g, b):
     return f"\033[48;2;{r};{g};{b}m"
 
+def _mix(a, b, t):
+    """Blend two (r, g, b) colors: t=0 gives a, t=1 gives b."""
+    return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
+
 def _luminance(rgb):
     """WCAG relative luminance of an (r, g, b) color."""
     def ch(v):
@@ -471,8 +510,11 @@ is_powerline = STYLE in ("powerline", "powerline-short")
 if is_powerline:
     segs = []
 
-    # Model segment
-    segs.append((BG_MODEL, FG_MODEL, f"\U000F16A3 {model}"))
+    # Model segment, with the profile tag inside it in a muted tone of its text
+    model_text = f"\U000F16A3 {model}"
+    if profile_tag:
+        model_text += f" {_fg(*_mix(FG_MODEL, BG_MODEL, 0.45))}· {profile_tag}"
+    segs.append((BG_MODEL, FG_MODEL, model_text))
 
     # Dir segments
     path_segs = _segments(cwd)
@@ -536,4 +578,9 @@ else:
     if rl_items:
         rl_part = f" {SEP} {' '.join(rl_items)}"
 
-    print(f"{C_MODEL}\U000F16A3 {model}{RST} {SEP} {dir_part}{branch_part} {SEP} {ctx_part}{rl_part}")
+    # Model (+ profile tag, muted)
+    model_part = f"{C_MODEL}\U000F16A3 {model}{RST}"
+    if profile_tag:
+        model_part += f" {C_PCT}{profile_tag}{RST}"
+
+    print(f"{model_part} {SEP} {dir_part}{branch_part} {SEP} {ctx_part}{rl_part}")

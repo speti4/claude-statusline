@@ -1,7 +1,7 @@
 ---
 name: deploy
 description: Deploy statusline.py to ~/.claude/ for runtime use
-version: 2.0.0
+version: 2.1.0
 allowed-tools:
   - Bash(pwsh scripts/deploy.ps1)
   - Bash(bash scripts/deploy.sh)
@@ -20,7 +20,9 @@ Runs the deploy script for the current platform:
 | macOS / Linux | `bash scripts/deploy.sh` |
 
 Both copy `statusline.py` → `~/.claude/statusline.py`, the path the `settings.json`
-statusline command runs.
+statusline command runs. The settings at the top of the script (`STYLE`, `COLOR_SCHEME`,
+`SHOW_RATE_LIMITS`, `SHOW_PROFILE_TAG`) are carried over from the copy already deployed,
+so a deploy never resets them.
 
 The `/statusline` skill is **not** deployed. It is a project-level skill living in
 `.claude/skills/statusline/`, available whenever you work in this repo.

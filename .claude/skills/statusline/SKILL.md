@@ -1,8 +1,8 @@
 ---
 name: statusline
-description: "Configure statusline: style, color scheme, rate limit visibility. Run without args for help."
-argument-hint: "minimal | default | rate-all | rate-none"
-version: 4.0.0
+description: "Configure statusline: style, color scheme, rate limit visibility, profile tag. Run without args for help."
+argument-hint: "minimal | default | rate-all | rate-none | profile-all | profile-none"
+version: 4.1.0
 allowed-tools: Bash(python3 "${CLAUDE_SKILL_DIR}/set_style.py" *)
 ---
 <!-- Source of truth: the claude-statusline repo; other copies are generated from it. -->
